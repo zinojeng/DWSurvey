@@ -9,7 +9,9 @@
     "init-db": "node src/db/init.js",
     "migrate-db": "node src/db/migrate.js",
     "build": "npm ci --production",
-    "postinstall": "node src/db/migrate.js && node src/db/init.js"
+    "postinstall": "npm run setup-db || echo 'Database setup failed, will retry on start'",
+    "setup-db": "node src/db/setup.js",
+    "prestart": "npm run setup-db"
   },
   "engines": {
     "node": ">=18.0.0"

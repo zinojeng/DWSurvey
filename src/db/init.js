@@ -1,8 +1,17 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
+// Ensure database directory exists
 const dbPath = path.resolve(process.env.DATABASE_FILE || './database/voting.db');
+const dbDir = path.dirname(dbPath);
+
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`Created database directory: ${dbDir}`);
+}
+
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
