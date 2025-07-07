@@ -58,24 +58,36 @@ async function loadAdminPolls() {
 function displayAdminPolls(polls) {
     const container = document.getElementById('adminPollsContainer');
     
+    console.log('Displaying polls:', polls);
+    
     if (polls.length === 0) {
         container.innerHTML = '<p>No polls created yet.</p>';
         return;
     }
     
-    container.innerHTML = polls.map(poll => `
+    // Filter out polls without valid IDs
+    const validPolls = polls.filter(poll => poll && poll.id);
+    console.log('Valid polls with IDs:', validPolls);
+    
+    if (validPolls.length === 0) {
+        container.innerHTML = '<p>No valid polls found. Database may need initialization.</p>';
+        return;
+    }
+    
+    container.innerHTML = validPolls.map(poll => `
         <div class="admin-poll-card">
             <div class="poll-info">
-                <h4>${poll.title}</h4>
+                <h4>${poll.title || 'Untitled Poll'}</h4>
                 <div class="poll-stats">
+                    ID: ${poll.id} | 
                     Status: ${poll.active ? (poll.closed ? 'Closed' : 'Active') : 'Inactive'} | 
                     Participants: ${poll.participant_count || 0} | 
-                    Created: ${new Date(poll.created_at).toLocaleDateString()}
+                    Created: ${poll.created_at ? new Date(poll.created_at).toLocaleDateString() : 'Unknown'}
                 </div>
             </div>
             <div class="poll-actions">
                 <button class="view-btn" onclick="window.open('/?poll=${poll.id}', '_blank')">View</button>
-                <button class="qr-btn" onclick="showQRCodes(${poll.id}, '${poll.title}')">QR Codes</button>
+                <button class="qr-btn" onclick="showQRCodes(${poll.id}, '${poll.title || 'Untitled Poll'}')">QR Codes</button>
                 <button class="edit-btn" onclick="editPoll(${poll.id})">Edit</button>
                 <button class="toggle-btn ${poll.active ? '' : 'inactive'}" 
                         onclick="togglePollStatus(${poll.id}, ${!poll.active})">
@@ -343,6 +355,15 @@ function printQRCodes(pollId) {
 
 // Edit poll
 async function editPoll(pollId) {
+    console.log('Edit poll called with ID:', pollId, 'Type:', typeof pollId);
+    
+    // Validate pollId
+    if (!pollId || pollId === 'undefined' || pollId === 'null') {
+        alert('Invalid poll ID. Please refresh the page and try again.');
+        console.error('Invalid poll ID received:', pollId);
+        return;
+    }
+    
     try {
         // Get poll data
         const response = await fetch(`/api/admin/polls/${pollId}/edit`, {
@@ -773,5 +794,58 @@ function closeDebugModal() {
     const modal = document.getElementById('debugModal');
     if (modal) {
         modal.remove();
+    }
+}
+
+// Create sample poll for testing
+async function createSamplePoll() {
+    if (!confirm('Create a sample poll for testing?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/polls', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                password: adminPassword,
+                title: 'Sample Poll - Primary Aldosteronism',
+                description: 'Testing poll for debugging purposes',
+                questions: [
+                    {
+                        text: 'When should we suspect primary aldosteronism?',
+                        type: 'single',
+                        options: [
+                            'Hypertension with hypokalemia',
+                            'All hypertensive patients',
+                            'Only when adrenal mass present',
+                            'Young patients only'
+                        ]
+                    },
+                    {
+                        text: 'What is the preferred screening test?',
+                        type: 'single',
+                        options: [
+                            'Plasma aldosterone concentration',
+                            'Plasma renin activity',
+                            'ARR (Aldosterone-to-Renin Ratio)',
+                            '24-hour urine aldosterone'
+                        ]
+                    }
+                ]
+            })
+        });
+        
+        if (response.ok) {
+            alert('Sample poll created successfully!');
+            loadAdminPolls();
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create sample poll');
+        }
+    } catch (error) {
+        alert('Error creating sample poll: ' + error.message);
     }
 }
