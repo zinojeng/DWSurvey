@@ -356,8 +356,26 @@ async function editPoll(pollId) {
         });
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `HTTP ${response.status}: Failed to load poll`);
+            let errorMessage = `HTTP ${response.status}: Failed to load poll`;
+            
+            // Clone response to read it multiple times
+            const responseClone = response.clone();
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                // If JSON parsing fails, try to get text from clone
+                try {
+                    const errorText = await responseClone.text();
+                    if (errorText) {
+                        errorMessage = `${errorMessage} - Response: ${errorText.substring(0, 200)}`;
+                    }
+                } catch (e2) {
+                    errorMessage = `${errorMessage} - Could not parse response`;
+                }
+            }
+            throw new Error(errorMessage);
         }
         
         const poll = await response.json();

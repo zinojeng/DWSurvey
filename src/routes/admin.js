@@ -7,8 +7,10 @@ const db = require('../models/database');
 const authenticate = async (req, res, next) => {
   const { password } = req.body;
   
-  // Log for debugging (remove in production)
+  // Check against environment variable or fallback
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  
+  // Log for debugging (remove in production)
   console.log('Auth attempt:', {
     receivedPassword: password ? '[HIDDEN]' : 'undefined',
     envPassword: process.env.ADMIN_PASSWORD ? '[SET]' : 'using fallback',
@@ -18,9 +20,6 @@ const authenticate = async (req, res, next) => {
   if (!password) {
     return res.status(401).json({ error: 'Password required' });
   }
-  
-  // Check against environment variable or fallback
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   
   if (password !== adminPassword) {
     return res.status(401).json({ error: 'Invalid password' });
