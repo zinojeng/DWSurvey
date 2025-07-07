@@ -28,7 +28,10 @@
             <div id="adminDashboard" class="admin-dashboard" style="display: none;">
                 <div class="dashboard-header">
                     <h2>Poll Management</h2>
-                    <button class="create-btn" onclick="showCreateForm()">+ Create New Poll</button>
+                    <div class="header-buttons">
+                        <button class="create-btn" onclick="showCreateForm()">+ Create New Poll</button>
+                        <button class="debug-btn" onclick="debugDatabase()" style="background-color: #666; margin-left: 10px;">🔍 Debug DB</button>
+                    </div>
                 </div>
 
                 <!-- Create Poll Form -->

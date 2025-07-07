@@ -704,3 +704,74 @@ async function closePoll(pollId) {
         alert('Error closing poll: ' + error.message);
     }
 }
+
+// Debug database function
+async function debugDatabase() {
+    try {
+        const response = await fetch('/api/admin/debug/database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                password: adminPassword
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Create debug modal
+            const modal = document.createElement('div');
+            modal.className = 'qr-modal';
+            modal.innerHTML = `
+                <div class="qr-modal-content">
+                    <button class="qr-modal-close" onclick="closeDebugModal()">&times;</button>
+                    <h3>Database Debug Info</h3>
+                    <div class="debug-info">
+                        <h4>Database Path:</h4>
+                        <p>${data.databasePath}</p>
+                        
+                        <h4>Database File Exists:</h4>
+                        <p>${data.databaseExists ? '✅ Yes' : '❌ No'}</p>
+                        
+                        <h4>Tables:</h4>
+                        <p>${data.tables.join(', ')}</p>
+                        
+                        <h4>Table Record Counts:</h4>
+                        <pre>${JSON.stringify(data.tableInfo, null, 2)}</pre>
+                        
+                        <h4>Polls Info:</h4>
+                        <pre>${JSON.stringify(data.pollsInfo, null, 2)}</pre>
+                        
+                        <h4>Timestamp:</h4>
+                        <p>${data.timestamp}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.id = 'debugModal';
+            
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeDebugModal();
+                }
+            });
+            
+        } else {
+            throw new Error('Failed to get debug info');
+        }
+    } catch (error) {
+        alert('Error getting debug info: ' + error.message);
+    }
+}
+
+// Close debug modal
+function closeDebugModal() {
+    const modal = document.getElementById('debugModal');
+    if (modal) {
+        modal.remove();
+    }
+}

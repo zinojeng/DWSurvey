@@ -9,11 +9,23 @@ async function setupDatabase() {
     const dbPath = path.resolve(process.env.DATABASE_FILE || './database/voting.db');
     const dbDir = path.dirname(dbPath);
 
+    console.log('🔧 Setting up database:', {
+      path: dbPath,
+      directory: dbDir,
+      environment: process.env.NODE_ENV || 'development'
+    });
+
     // Ensure database directory exists
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
       console.log(`✅ Created database directory: ${dbDir}`);
+    } else {
+      console.log(`📁 Database directory exists: ${dbDir}`);
     }
+
+    // Check if database file exists
+    const dbExists = fs.existsSync(dbPath);
+    console.log(`💾 Database file exists: ${dbExists}`);
 
     return new Promise((resolve, reject) => {
       const db = new sqlite3.Database(dbPath, (err) => {
@@ -22,7 +34,7 @@ async function setupDatabase() {
           reject(err);
           return;
         }
-        console.log('✅ Connected to SQLite database');
+        console.log('✅ Connected to SQLite database at:', dbPath);
       });
 
       db.serialize(() => {
@@ -82,6 +94,15 @@ async function setupDatabase() {
           else console.log('✅ Votes table ready');
         });
 
+        // Verify tables were created correctly
+        db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+          if (err) {
+            console.error('❌ Error checking tables:', err);
+          } else {
+            console.log('📋 Tables in database:', tables.map(t => t.name));
+          }
+        });
+
         db.close((err) => {
           if (err) {
             console.error('❌ Error closing database:', err.message);
@@ -99,6 +120,56 @@ async function setupDatabase() {
   }
 }
 
+// Database health check function
+async function checkDatabaseHealth() {
+  try {
+    const dbPath = path.resolve(process.env.DATABASE_FILE || './database/voting.db');
+    
+    if (!fs.existsSync(dbPath)) {
+      console.warn('⚠️  Database file does not exist, will create new one');
+      return false;
+    }
+
+    return new Promise((resolve, reject) => {
+      const db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+          console.error('❌ Database health check failed:', err.message);
+          resolve(false);
+          return;
+        }
+      });
+
+      // Check if required tables exist
+      db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+        if (err) {
+          console.error('❌ Error checking tables:', err);
+          db.close();
+          resolve(false);
+          return;
+        }
+
+        const tableNames = tables.map(t => t.name);
+        const requiredTables = ['polls', 'questions', 'options', 'votes'];
+        const missingTables = requiredTables.filter(t => !tableNames.includes(t));
+
+        if (missingTables.length > 0) {
+          console.warn('⚠️  Missing tables:', missingTables);
+          db.close();
+          resolve(false);
+          return;
+        }
+
+        console.log('✅ Database health check passed');
+        db.close();
+        resolve(true);
+      });
+    });
+  } catch (error) {
+    console.error('❌ Database health check error:', error.message);
+    return false;
+  }
+}
+
 // Run setup if called directly
 if (require.main === module) {
   setupDatabase()
@@ -112,4 +183,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { setupDatabase };
+module.exports = { setupDatabase, checkDatabaseHealth };

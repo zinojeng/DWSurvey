@@ -127,15 +127,43 @@ router.post('/polls/:id/edit', authenticate, async (req, res) => {
   try {
     const pollId = req.params.id;
     
+    console.log('Edit poll request:', {
+      pollId,
+      type: typeof pollId,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Check if pollId is valid
+    if (!pollId || pollId === 'undefined') {
+      console.error('Invalid poll ID:', pollId);
+      return res.status(400).json({ error: 'Invalid poll ID' });
+    }
+    
+    // First, let's check what polls exist
+    const allPolls = await db.all('SELECT id, title FROM polls');
+    console.log('All polls in database:', allPolls);
+    
     const poll = await db.get('SELECT * FROM polls WHERE id = ?', [pollId]);
+    console.log('Poll query result:', poll);
+    
     if (!poll) {
-      return res.status(404).json({ error: 'Poll not found' });
+      console.error('Poll not found in database:', {
+        requestedId: pollId,
+        availablePolls: allPolls
+      });
+      return res.status(404).json({ 
+        error: 'Poll not found',
+        requestedId: pollId,
+        availablePolls: allPolls.map(p => p.id)
+      });
     }
 
     const questions = await db.all(
       'SELECT * FROM questions WHERE poll_id = ? ORDER BY order_index',
       [pollId]
     );
+
+    console.log('Questions found:', questions.length);
 
     for (let question of questions) {
       question.options = await db.all(
@@ -145,8 +173,10 @@ router.post('/polls/:id/edit', authenticate, async (req, res) => {
     }
 
     poll.questions = questions;
+    console.log('Poll data prepared successfully');
     res.json(poll);
   } catch (error) {
+    console.error('Error in edit poll:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -316,6 +346,47 @@ router.post('/polls/list', authenticate, async (req, res) => {
     }
 
     res.json(polls);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Database debug endpoint
+router.post('/debug/database', authenticate, async (req, res) => {
+  try {
+    // Get database file path
+    const path = require('path');
+    const dbPath = path.resolve(process.env.DATABASE_FILE || './database/voting.db');
+    const fs = require('fs');
+    
+    // Check if database file exists
+    const dbExists = fs.existsSync(dbPath);
+    
+    // Get all tables
+    const tables = await db.all("SELECT name FROM sqlite_master WHERE type='table'");
+    
+    // Get count of records in each table
+    const tableInfo = {};
+    for (let table of tables) {
+      try {
+        const count = await db.get(`SELECT COUNT(*) as count FROM ${table.name}`);
+        tableInfo[table.name] = count.count;
+      } catch (error) {
+        tableInfo[table.name] = `Error: ${error.message}`;
+      }
+    }
+    
+    // Get all polls with basic info
+    const pollsInfo = await db.all('SELECT id, title, active, closed, created_at FROM polls');
+    
+    res.json({
+      databasePath: dbPath,
+      databaseExists: dbExists,
+      tables: tables.map(t => t.name),
+      tableInfo,
+      pollsInfo,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

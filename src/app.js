@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const { setupDatabase, checkDatabaseHealth } = require('./db/setup');
 require('dotenv').config();
 
 const pollRoutes = require('./routes/polls');
@@ -80,10 +81,36 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Access the app at:`);
-  console.log(`  - http://192.168.1.118:${PORT}`);
-  console.log(`  - http://localhost:${PORT}`);
-  console.log(`  - http://127.0.0.1:${PORT}`);
-});
+
+// Initialize database and start server
+async function startServer() {
+  try {
+    console.log('🚀 Starting DWSurvey server...');
+    
+    // Check database health first
+    const isHealthy = await checkDatabaseHealth();
+    
+    if (!isHealthy) {
+      console.log('🔧 Database needs setup, initializing...');
+      await setupDatabase();
+    } else {
+      console.log('✅ Database is healthy');
+    }
+    
+    // Start server
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`🌐 Server is running on port ${PORT}`);
+      console.log(`📱 Access the app at:`);
+      console.log(`  - Admin: http://localhost:${PORT}/admin.html`);
+      console.log(`  - Voting: http://localhost:${PORT}`);
+      console.log(`  - Local IP: http://192.168.1.118:${PORT}`);
+      console.log(`🎯 Ready to accept connections!`);
+    });
+    
+  } catch (error) {
+    console.error('💥 Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
