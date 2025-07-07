@@ -1,0 +1,13 @@
+{
+  "name": "dwsurvey-voting",
+  "type": "nodejs",
+  "buildCommand": "npm install",
+  "startCommand": "npm start",
+  "outputDirectory": ".",
+  "installCommand": "npm install",
+  "framework": "express",
+  "nodeVersion": "18",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

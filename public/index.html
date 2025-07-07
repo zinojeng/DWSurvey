@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DW Survey - Real-time Voting</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DW Survey</h1>
+            <p class="tagline">Real-time audience voting system</p>
+        </header>
+
+        <main>
+            <!-- Poll List -->
+            <div id="pollList" class="poll-list">
+                <h2>Active Polls</h2>
+                <div id="pollsContainer" class="polls-container">
+                    <div class="loading">Loading polls...</div>
+                </div>
+            </div>
+
+            <!-- Poll View -->
+            <div id="pollView" class="poll-view" style="display: none;">
+                <button class="back-btn" onclick="showPollList()">← Back to Polls</button>
+                <div id="pollContent"></div>
+            </div>
+
+            <!-- Results View -->
+            <div id="resultsView" class="results-view" style="display: none;">
+                <button class="back-btn" onclick="showPollList()">← Back to Polls</button>
+                <h2>Live Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by DW Survey | <a href="/admin.html">Admin Panel</a></p>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

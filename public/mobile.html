@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DW Survey - Mobile Voting</title>
+    <link rel="stylesheet" href="/css/mobile.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="mobile-header">
+            <h1>DW Survey</h1>
+        </header>
+
+        <main class="mobile-main">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading question...</p>
+            </div>
+
+            <!-- Question View -->
+            <div id="questionView" class="question-view" style="display: none;">
+                <div class="question-header">
+                    <h2 id="pollTitle"></h2>
+                    <div class="question-number" id="questionNumber"></div>
+                </div>
+                
+                <div class="question-content">
+                    <h3 id="questionText"></h3>
+                    <div id="optionsList" class="options-list"></div>
+                </div>
+
+                <button id="submitBtn" class="submit-btn mobile-submit" disabled>
+                    Submit Vote
+                </button>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" class="success-state" style="display: none;">
+                <div class="success-icon">✓</div>
+                <h2>Vote Submitted!</h2>
+                <p>Thank you for participating</p>
+                <button onclick="viewResults()" class="view-results-btn">
+                    View Live Results
+                </button>
+            </div>
+
+            <!-- Already Voted State -->
+            <div id="alreadyVotedState" class="already-voted-state" style="display: none;">
+                <div class="info-icon">ℹ️</div>
+                <h2>Already Voted</h2>
+                <p>You have already submitted your vote for this question</p>
+                <button onclick="viewResults()" class="view-results-btn">
+                    View Live Results
+                </button>
+            </div>
+
+            <!-- Poll Closed State -->
+            <div id="pollClosedState" class="poll-closed-state" style="display: none;">
+                <div class="closed-icon">🔒</div>
+                <h2>Voting Closed</h2>
+                <p>This poll is no longer accepting votes</p>
+                <button onclick="viewResults()" class="view-results-btn">
+                    View Final Results
+                </button>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h2>Error</h2>
+                <p id="errorMessage"></p>
+                <button onclick="location.reload()" class="retry-btn">
+                    Try Again
+                </button>
+            </div>
+        </main>
+
+        <footer class="mobile-footer">
+            <p>Powered by DW Survey</p>
+        </footer>
+    </div>
+
+    <script src="/js/mobile.js"></script>
+</body>
+</html>
