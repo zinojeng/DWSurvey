@@ -356,7 +356,8 @@ async function editPoll(pollId) {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to load poll');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}: Failed to load poll`);
         }
         
         const poll = await response.json();
